@@ -94,8 +94,7 @@ if [ "$lnx" = true ]; then
         cp $script_dir/su_st_daemon /etc/init.d/{0}_st >> /dev/null 2>&1
         chmod +x $su_trgt/{0}
         chmod +x /etc/init.d/{0}_st
-        chkconfig --add {0}_st
-        chkconfig --level 2345 {0}_st on
+        update-rc.d -f {0}_st defaults 99
         /etc/init.d/{0}_st start
     else
         cp -R $script_dir/{0} $trgt/{0} >> /dev/null 2>&1
@@ -160,14 +159,21 @@ def gen_osx_plist(alias,mkself_tmp):
         s.write(plist_code)
 
 def gen_lnx_daemon(alias,mkself_tmp):
-    su_daemon_code = '''#!/bin/bash
-# chkconfig: 2345 80 20
+    su_daemon_code = '''#!/bin/sh
 
-# Source function library.
-. /etc/init.d/functions
+### BEGIN INIT INFO
+# Provides:          stitch_lnx
+# Required-Start:    $remote_fs $network
+# Required-Stop:     $remote_fs $network
+# Should-Start:
+# Should-Stop:
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Enjoy it.
+### END INIT INFO
 
 start() {{
-    daemon /usr/sbin/{0} &
+    nohup /usr/sbin/{0} &
 }}
 
 stop() {{
@@ -186,6 +192,7 @@ case "$1" in
 esac
 
 exit 0
+
 '''.format(alias)
 
     su_st_daemon = os.path.join(mkself_tmp, 'su_st_daemon')
